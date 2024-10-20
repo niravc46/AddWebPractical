@@ -79,6 +79,7 @@ Step 7: Compile Assets
 
 	For development, run:
 	npm run dev
+ 
 	For production, run:
 	npm run prod
 
@@ -86,8 +87,12 @@ Step 8: Run the Local Development Server
 	You can now start the Laravel development server:
  
 	php artisan serve
+ 
+Step 9: Run Below command for Run Queue job for email notification
+ 
+     php artisan queue:work
 
-The server should now be running at 
+Step 10: The server should now be running at 
 
 	http://localhost:8000.
 
