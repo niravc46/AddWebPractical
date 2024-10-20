@@ -7,7 +7,7 @@ Requirements
 
 	PHP >= 8.0
 	Composer (PHP dependency manager)
-	MySQL or any other database server
+	MySQL
 	Node.js & NPM
 	Git
 Step 1: Clone the Repository
