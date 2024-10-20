@@ -14,10 +14,12 @@ Step 1: Clone the Repository
 	First, clone the repository from GitHub:
 	
 	git clone https://github.com/niravc46/AddWebPractical.git
-	Navigate into the project directory:
+Navigate into the project directory:
+
 	cd AddWebPractical
-Step 2: Install PHP Dependencies
-		Run the following command to install all PHP dependencies via Composer: 
+ 
+Step 2: Install Project Dependencies
+		Run the following command to install all Project dependencies via Composer: 
   		
 	composer install
 
@@ -34,7 +36,7 @@ Now, open the .env file in a text editor and set the following environment varia
 		APP_ENV=local
 		APP_KEY=base64:generated_key
 		APP_DEBUG=true
-		APP_URL=http://localhost
+		APP_URL=http://127.0.0.1:8000
 		
 		DB_CONNECTION=mysql
 		DB_HOST=127.0.0.1
@@ -61,7 +63,7 @@ Step 4: Generate Application Key
 Step 5: Set Up the Database
 	Create a MySQL database named addweb_practical (or use a different name and adjust the .env file accordingly).
 	
-	Run the migrations to set up the database schema:
+Run the migrations to set up the database schema:
 	
 	php artisan migrate
 	
@@ -75,24 +77,22 @@ Install all frontend dependencies using NPM:
 	
 	npm install
 
-Step 7: Compile Assets
+Step 7:Keep rub below command for Compile Assets
 
-	For development, run:
+  For development, run:
+
 	npm run dev
- 
-	For production, run:
-	npm run prod
 
 Step 8: Run the Local Development Server
 	You can now start the Laravel development server:
  
 	php artisan serve
  
-Step 9: Run Below command for Run Queue job for email notification
+Step 9: Keep Run Below command for Run Queue job for email notification
  
      php artisan queue:work
 
-Step 10: The server should now be running at 
+Step 10:Keep run the server should now be running at 
 
 	http://localhost:8000.
 
