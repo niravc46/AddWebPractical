@@ -42,6 +42,16 @@ Now, open the .env file in a text editor and set the following environment varia
 		DB_DATABASE=addweb_practical
 		DB_USERNAME=your_username
 		DB_PASSWORD=your_password
+Configure below things in .env for mail notification
+
+        MAIL_MAILER=smtp
+        MAIL_HOST=sandbox.smtp.mailtrap.io
+        MAIL_PORT=2525
+        MAIL_USERNAME=username
+        MAIL_PASSWORD=password
+        MAIL_ENCRYPTION=null
+        MAIL_FROM_ADDRESS="noreply@addweb.com"
+        MAIL_FROM_NAME="${APP_NAME}"
 
 Step 4: Generate Application Key
 	Generate the Laravel application key:
