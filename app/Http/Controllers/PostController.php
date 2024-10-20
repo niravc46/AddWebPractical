@@ -8,8 +8,12 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\PostImage;
 use App\Models\User;
 use App\Notifications\PostPublished;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
@@ -24,7 +28,7 @@ class PostController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $authors = User::whereHas('roles', function($query) {
+        $authors = User::whereHas('roles', function ($query) {
             $query->where('name', 'Author');
         })->get();
 
@@ -34,7 +38,7 @@ class PostController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('content', 'LIKE', "%{$search}%");
+                    ->orWhere('content', 'LIKE', "%{$search}%");
             });
         }
 
@@ -69,32 +73,35 @@ class PostController extends Controller
      */
     public function store(StorePostRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
+            $post = Post::create([
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                'content' => $request->content,
+                'created_by_role' => Auth::user()->hasRole('Admin') === true ? 'Admin' : 'Author'
+            ]);
 
-        $post = Post::create([
-            'user_id' => Auth::id(),
-            'title' => $request->title,
-            'content' => $request->content,
-            'created_by_role' => Auth::user()->hasRole('Admin') === true ? 'Admin' : 'Author'
-        ]);
-
-        //  Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('public/posts');
-                PostImage::create([
-                    'post_id' => $post->id,
-                    'image_path' => Storage::url($path)
-                ]);
+            //  Handle image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('public/posts');
+                    PostImage::create([
+                        'post_id' => $post->id,
+                        'image_path' => Storage::url($path)
+                    ]);
+                }
             }
-        }
-        // Notify all users
-        $users = User::all();
-        foreach ($users as $user) {
-            $user->notify(new PostPublished($post));
-        }
+            // Notify all users
+            $users = User::where('id', '!=', Auth::id())->get();
 
-        return redirect()->route('posts.index')->with('success', 'Post created successfully.');
+            Notification::send($users, new PostPublished($post));
+
+            return redirect()->route('posts.index')->with('success', 'Post created successfully.');
+        } catch (Exception $e) {
+            Log::error('Post create failed: ' . $e->getMessage());
+            return redirect()->route('posts.index')->with('error', 'An error occurred while creating the post.');
+        }
     }
 
     /**
@@ -102,13 +109,12 @@ class PostController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $post = Post::with('images')->findOrFail($id);
-
-        if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
-            return redirect()->route('posts.index')->with('error', 'Unauthorized access');
+        try {
+            $post = Post::with('images')->findOrFail($id);
+            return view('posts.view', compact('post'));
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('posts.index')->with('error', 'Post not found');
         }
-
-        return view('posts.view', compact('post'));
     }
 
     /**
@@ -116,13 +122,16 @@ class PostController extends Controller
      */
     public function edit($id)
     {
-        $post = Post::findOrFail($id);
 
-        if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
-            return redirect()->route('posts.index')->with('error', 'Unauthorized access');
+        try {
+            $post = Post::with('images')->findOrFail($id);
+            if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
+                return redirect()->route('posts.index')->with('error', 'Unauthorized access');
+            }
+            return view('posts.edit', compact('post'));
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('posts.index')->with('error', 'Post not found');
         }
-
-        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -130,41 +139,49 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, $id)
     {
-        $post = Post::findOrFail($id);
+        try {
+            $post = Post::findOrFail($id);
 
-        // Authorization check
-        if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
-            return redirect()->route('posts.index')->with('error', 'Unauthorized access');
-        }
-
-        $validated = $request->validated();
-
-        // Update Post
-        $post->update([
-            'title' => $request->input('title'),
-            'content' => $request->input('content')
-        ]);
-
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            // Delete old images
-            $oldImages = PostImage::where('post_id', $post->id)->get();
-            foreach ($oldImages as $oldImage) {
-                Storage::delete('public/posts/' . basename($oldImage->image_path));
-                $oldImage->delete();
+            // Check User authorization
+            if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
+                return redirect()->route('posts.index')->with('error', 'Unauthorized access');
             }
 
-            // Store new images
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('public/posts');
-                PostImage::create([
-                    'post_id' => $post->id,
-                    'image_path' => Storage::url($path)
-                ]);
-            }
-        }
+            $validated = $request->validated();
 
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
+            // Update Post
+            $post->update([
+                'title' => $request->input('title'),
+                'content' => $request->input('content')
+            ]);
+
+            // Handle image uploads
+            if ($request->hasFile('images')) {
+                // Delete old images
+                $oldImages = PostImage::where('post_id', $post->id)->get();
+                foreach ($oldImages as $oldImage) {
+                    Storage::delete('public/posts/' . basename($oldImage->image_path));
+                    $oldImage->delete();
+                }
+
+                // Store new images
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('public/posts');
+                    PostImage::create([
+                        'post_id' => $post->id,
+                        'image_path' => Storage::url($path)
+                    ]);
+                }
+            }
+
+            return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('posts.index')->with('error', 'Post not found.');
+        } catch (Exception $e) {
+            // Log the error for debugging
+            Log::error('Post update failed: ' . $e->getMessage());
+            return redirect()->route('posts.index')->with('error', 'An error occurred while updating the post.');
+        }
     }
 
     /**
@@ -172,17 +189,19 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        $post = Post::findOrFail($id);
+        try {
+            $post = Post::findOrFail($id);
 
-        // Author can only delete their own posts
-        if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
-            return redirect()->route('posts.index')->with('error', 'Unauthorized access');
+            // Author can only delete their own posts
+            if (Auth::user()->hasRole('Author') && $post->user_id != Auth::id()) {
+                return redirect()->route('posts.index')->with('error', 'Unauthorized access');
+            }
+            // Delete the post and associated images
+            $post->images()->delete();
+            $post->delete();
+            return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('posts.index')->with('error', 'Post not found');
         }
-
-        // Delete the post and associated images
-        $post->images()->delete();
-        $post->delete();
-
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
     }
 }

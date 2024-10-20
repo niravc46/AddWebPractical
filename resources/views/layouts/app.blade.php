@@ -35,7 +35,7 @@
 
 
             <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
+                <a class="navbar-brand" href="{{ url('/posts') }}">
                     {{ config('app.name', 'Laravel') }}
                 </a>
                 @guest
@@ -78,30 +78,25 @@
                                 </li>
                             @endif
                         @else
-
-                            {{-- @foreach (auth()->user()->unreadNotifications as $notification)
-                                <div class="alert alert-info">
-                                    {{ $notification->data['title'] }}
-                                    <a href="{{ route('posts.show', $notification->data['post_id']) }}">View Post</a>
-                                </div>
-                            @endforeach --}}
-
                             <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="notificationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Notifications <span class="badge badge-light">{{ auth()->user()->unreadNotifications->count() }}</span>
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="notificationDropdown"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Notifications <span
+                                        class="badge badge-light">{{ auth()->user()->unreadNotifications->count() }}</span>
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="notificationDropdown">
                                     @forelse (auth()->user()->unreadNotifications as $notification)
-                                    <form action="{{ route('notifications.read', $notification->id) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            {{ $notification->data['title'] }}
-                                        </button>
-                                    </form>
-                                    <div class="dropdown-divider"></div>
-                                @empty
-                                    <a class="dropdown-item" href="#">No new notifications</a>
-                                @endforelse
+                                        <form action="{{ route('notifications.read', $notification->id) }}" method="POST"
+                                            style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item">
+                                                {{ $notification->data['title'] }}
+                                            </button>
+                                        </form>
+                                        <div class="dropdown-divider"></div>
+                                    @empty
+                                        <a class="dropdown-item" href="#">No new notifications</a>
+                                    @endforelse
                                 </div>
                             </div>
 

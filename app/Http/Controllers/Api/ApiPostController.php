@@ -7,12 +7,15 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\PostImage;
+use App\Models\User;
+use App\Notifications\PostPublished;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
 
 class ApiPostController extends Controller
 {
@@ -82,13 +85,18 @@ class ApiPostController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            // Handle file uploads if images are provided
+            // Handle file uploads
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $imagePath = $image->store('post_images', 'public');
                     $post->images()->create(['image_path' => $imagePath]);
                 }
             }
+
+            // Notify all users
+            $users = User::where('id', '!=', Auth::id())->get();
+            Notification::send($users, new PostPublished($post));
+
             DB::commit();
             return (new PostResource($post))
                 ->additional(['message' => 'Post created successfully', 'status' => 201])

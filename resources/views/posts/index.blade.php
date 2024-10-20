@@ -8,6 +8,13 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
+
         <h1>All Posts</h1>
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -32,25 +39,32 @@
                     <div class="pr-2 mx-2">
                         <select name="author" class="form-control">
                             <option value="">Select Author</option>
-                            @foreach($authors as $authorOption)
-                                <option value="{{ $authorOption->id }}" {{ $authorOption->id == old('author', $author) ? 'selected' : '' }}>
+                            @foreach ($authors as $authorOption)
+                                <option value="{{ $authorOption->id }}"
+                                    {{ $authorOption->id == old('author', $author) ? 'selected' : '' }}>
                                     {{ $authorOption->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    {{-- Date range  --}}
+                    {{-- Date range --}}
                     <div class="pr-2 mx-2">
-                        <input type="date" name="start_date" class="form-control" value="{{ old('start_date', $startDate) }}">
+                        <input type="date" name="start_date" class="form-control"
+                            value="{{ old('start_date', $startDate) }}">
                     </div>
                     <div class="pr-2">
                         <input type="date" name="end_date" class="form-control" value="{{ old('end_date', $endDate) }}">
                     </div>
 
-                    {{-- search button  --}}
+                    {{-- Search button --}}
                     <div class="input-group-append mx-2">
                         <button class="btn btn-outline-secondary" type="submit">Search</button>
+                    </div>
+
+                    {{-- Reset Filters button --}}
+                    <div class="input-group-append mx-2">
+                        <a href="{{ route('posts.index') }}" class="btn btn-outline-secondary">Reset Filters</a>
                     </div>
                 </div>
             </form>
@@ -108,7 +122,8 @@
         <!-- Pagination Links -->
         <div class="d-flex justify-content-between align-items-center mt-3">
             <div>
-                <p class="text-muted">Showing {{ $posts->firstItem() }} to {{ $posts->lastItem() }} of {{ $posts->total() }} posts</p>
+                <p class="text-muted">Showing {{ $posts->firstItem() }} to {{ $posts->lastItem() }} of
+                    {{ $posts->total() }} posts</p>
             </div>
             <div>
                 {{ $posts->links('pagination::bootstrap-4') }}
@@ -121,6 +136,10 @@
     <script>
         setTimeout(function() {
             $('.alert-success').alert('close');
+        }, 3000);
+
+        setTimeout(function() {
+            $('.alert-danger').alert('close');
         }, 3000);
 
         $(document).ready(function() {

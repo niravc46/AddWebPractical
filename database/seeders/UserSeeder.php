@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-         // Admin user
+         // Create Admin
          $admin = User::create([
             'name' => 'Admin',
             'email' => 'admin@admin.com',
@@ -22,15 +22,28 @@ class UserSeeder extends Seeder
 
         $admin->assignRole('Admin');
 
+        // Create authors
+        $authors = [
+            [
+                'name' => 'Test Author 1',
+                'email' => 'author1@author.com',
+                'password' => bcrypt('password'),
+            ],
+            [
+                'name' => 'Test Author 2',
+                'email' => 'author2@author.com',
+                'password' => bcrypt('password'),
+            ],
+            [
+                'name' => 'Test Author 3',
+                'email' => 'author3@author.com',
+                'password' => bcrypt('password'),
+            ],
+        ];
 
-         // Test Autor
-         $author = User::create([
-            'name' => 'Test Author',
-            'email' => 'author@author.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        // Assign Role
-        $author->assignRole('Author');
+        foreach ($authors as $authorData) {
+            $author = User::create($authorData);
+            $author->assignRole('Author');
+        }
     }
 }

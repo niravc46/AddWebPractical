@@ -2,17 +2,6 @@
 
 @section('content')
     <div class="container">
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <div class="display: inline-block;">
-            <div>        <h1>Create New Post</h1>  <div id="loading-spinner" class="spinner-border text-primary" style="display:none;" role="status">
-            </div></div>
-
-        </div>
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
@@ -22,34 +11,48 @@
                 </ul>
             </div>
         @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <div class="display: inline-block;">
+            <div>
+                <h1>Create New Post</h1>
+                <div id="loading-spinner" class="spinner-border text-primary" style="display:none;" role="status">
+                </div>
+            </div>
+
+        </div>
         <form id="post-form" action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label for="title">Title</label>
-                <input type="text" class="form-control" id="title" name="title" required>
+                <input type="text" class="form-control" id="title" name="title">
             </div>
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label for="content">Content</label>
-                <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                <textarea class="form-control" id="content" name="content" rows="10"></textarea>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label for="images">Upload Images</label>
                 <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/*">
             </div>
-            <div id="image-preview" class="row mt-3"></div>
+            <div id="image-preview" class="row mt-3 mb-2"></div>
 
             <div class="form-group mt-4">
                 <button type="submit" id="submit-button" class="btn btn-primary">Submit</button>
-
+                <a href="{{ route('posts.index') }}" class="btn btn-danger">cancel</a>
             </div>
         </form>
     </div>
 
 @section('scripts')
     <script>
-        // Auto-close the success alert
         setTimeout(function() {
-            $('.alert-success').alert('close');
+            $('.alert-danger').alert('close');
         }, 3000);
 
         // Preview the selected images
