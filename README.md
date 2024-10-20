@@ -61,6 +61,7 @@ Step 4: Generate Application Key
 	php artisan key:generate
 
 Step 5: Set Up the Database
+
 	Create a MySQL database named addweb_practical (or use a different name and adjust the .env file accordingly).
 	
 Run the migrations to set up the database schema:
