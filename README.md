@@ -1,6 +1,6 @@
 =>  Local Development Setup Guide
 
-	This guide will help you set up the addweb_practical Laravel project in your local development environment.
+This guide will help you set up the addweb_practical Laravel project in your local development environment.
 
 Requirements
 	Ensure you have the following installed:
